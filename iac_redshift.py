@@ -34,16 +34,18 @@ DWH_PORT = config.get("CLUSTER", "DB_PORT")
 IAM_ROLE_ARN = config.get("IAM_ROLE", "ARN")
 IAM_ROLE_NAME = config.get("IAM_ROLE", "NAME")
 
+boto3.DEFAULT_SESSION = None
+
 
 def get_client(
-    region_name: str, aws_access_key: str, aws_secret_access_key: str
+    aws_access_key: str, aws_secret_access_key: str, region_name: str
 ) -> dict:
     """Get clients needed for cluster administration
 
     Args:
-        region_name (str): AWS region
         aws_access_key (str): AWS access key
         aws_secret_access_key (str): AWS secret access key
+        region_name (str): AWS region
 
     Returns:
         dict: AWS Clients
@@ -55,38 +57,37 @@ def get_client(
         "aws_secret_access_key": aws_secret_access_key,
     }
 
+    session = boto3.session.Session(**kwargs)
+
     client = {}
-    client["ec2"] = boto3.resource("ec2", **kwargs)
-    client["iam"] = boto3.client("iam", **kwargs)
-    client["redshift"] = boto3.client("redshift", **kwargs)
+    client["ec2"] = session.resource("ec2")
+    client["iam"] = session.client("iam")
+    client["redshift"] = session.client("redshift")
 
     return client
 
 
-def create_rol(iam, role_name: str) -> Tuple[dict, str]:
+def create_rol(iam, role_name: str) -> str:
     """Create rol for Redshift Cluster"""
 
-    try:
-        print("Creating a new IAM Role")
-        dwh_role = iam.create_role(
-            Path="/",
-            RoleName=role_name,
-            Description="Allows Redshift clusters to call AWS services on your behalf.",
-            AssumeRolePolicyDocument=json.dumps(
-                {
-                    "Statement": [
-                        {
-                            "Action": "sts:AssumeRole",
-                            "Effect": "Allow",
-                            "Principal": {"Service": "redshift.amazonaws.com"},
-                        }
-                    ],
-                    "Version": "2012-10-17",
-                }
-            ),
-        )
-    except Exception as e:
-        print(e)
+    print("Creating a new IAM Role")
+    _ = iam.create_role(
+        Path="/",
+        RoleName=role_name,
+        Description="Allows Redshift clusters to call AWS services on your behalf.",
+        AssumeRolePolicyDocument=json.dumps(
+            {
+                "Statement": [
+                    {
+                        "Action": "sts:AssumeRole",
+                        "Effect": "Allow",
+                        "Principal": {"Service": "redshift.amazonaws.com"},
+                    }
+                ],
+                "Version": "2012-10-17",
+            }
+        ),
+    )
 
     print("Attaching Policy")
 
@@ -98,7 +99,7 @@ def create_rol(iam, role_name: str) -> Tuple[dict, str]:
     print("Get the IAM role ARN")
     role_arn = iam.get_role(RoleName=role_name)["Role"]["Arn"]
 
-    return dwh_role, role_arn
+    return role_arn
 
 
 def create_redshift_cluster(redshift, role_arn: str) -> None:
@@ -119,11 +120,6 @@ def create_redshift_cluster(redshift, role_arn: str) -> None:
         )
     except Exception as e:
         print(e)
-
-    cluster = response.get("Cluster")
-    if cluster:
-        _ = cluster.pop("Endpoint")
-        print(json.dumps(cluster))
 
 
 def get_cluster_status(redshift) -> None:
@@ -231,18 +227,26 @@ def main(args):
 
     # Change width
     pd.set_option("display.max_colwidth", None)
-    # client = get_client(AWS_KEY, AWS_REGION, AWS_SECRET)
+
+    client = get_client(AWS_KEY, AWS_SECRET, AWS_REGION)
 
     if args.create:
         print("Creating Cluster")
-        # create_rol(client["iam"], IAM_ROLE_NAME)
+        role_arn = create_rol(client["iam"], IAM_ROLE_NAME)
+        create_redshift_cluster(client["redshift"], role_arn)
+        cluster_metadata = get_cluster_status(client["redshift"])
+        open_tcp_port(client["ec2"], cluster_metadata)
+
     elif args.delete:
         print("Deleting cluster")
+        delete_cluster(client["redshift"])
+        delete_role(client["iam"])
+
     if args.status:
         print("Checking status")
+        _ = get_cluster_status(client["redshift"])
 
 
 if __name__ == "__main__":
     args = parse_args()
-
     main(args)
