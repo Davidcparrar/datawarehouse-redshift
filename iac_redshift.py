@@ -4,10 +4,10 @@ Based on IaC Solution.ipynb notebook drom Udacity Data Engineer Nanodegree
 """
 import configparser
 import json
+import sys
 from typing import Tuple
 import argparse
 import boto3
-import botocore
 import pandas as pd
 
 # ---------------------------------------------------------------------
@@ -189,3 +189,60 @@ def delete_role(iam):
     print("Role {IAM_ROLE_NAME} detatched")
     iam.delete_role(RoleName=IAM_ROLE_NAME)
     print("Role {IAM_ROLE_NAME} deleted")
+
+
+def parse_args() -> dict:
+    """Parses command line arguments
+
+    Returns:
+        dict: Parsed arguments
+    """
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument(
+        "-c",
+        "--create",
+        help="Create Redshift Cluster",
+        action="store_true",
+    )
+    parser.add_argument(
+        "-s",
+        "--status",
+        help="Check Cluster status",
+        action="store_true",
+    )
+    parser.add_argument(
+        "-d",
+        "--delete",
+        help="Delete cluster",
+        action="store_true",
+    )
+    args = parser.parse_args()
+
+    if len(sys.argv) == 1:
+        parser.print_help()
+        sys.exit()
+
+    return args
+
+
+def main(args):
+    """Main Function"""
+
+    # Change width
+    pd.set_option("display.max_colwidth", None)
+    # client = get_client(AWS_KEY, AWS_REGION, AWS_SECRET)
+
+    if args.create:
+        print("Creating Cluster")
+        # create_rol(client["iam"], IAM_ROLE_NAME)
+    elif args.delete:
+        print("Deleting cluster")
+    if args.status:
+        print("Checking status")
+
+
+if __name__ == "__main__":
+    args = parse_args()
+
+    main(args)
