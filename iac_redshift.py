@@ -5,7 +5,7 @@ Based on IaC Solution.ipynb notebook drom Udacity Data Engineer Nanodegree
 import configparser
 import json
 from typing import Tuple
-
+import argparse
 import boto3
 import botocore
 import pandas as pd
@@ -63,7 +63,7 @@ def get_client(
     return client
 
 
-def create_rol(iam: botocore.client.IAM, role_name: str) -> Tuple[dict, str]:
+def create_rol(iam, role_name: str) -> Tuple[dict, str]:
     """Create rol for Redshift Cluster"""
 
     try:
@@ -101,9 +101,7 @@ def create_rol(iam: botocore.client.IAM, role_name: str) -> Tuple[dict, str]:
     return dwh_role, role_arn
 
 
-def create_redshift_cluster(
-    redshift: botocore.client.Redshift, role_arn: str
-) -> None:
+def create_redshift_cluster(redshift, role_arn: str) -> None:
     """Create AWS Redshift Cluster"""
     try:
         response = redshift.create_cluster(
@@ -156,9 +154,7 @@ def get_cluster_status(redshift) -> None:
     return cluster_metadata
 
 
-def open_tcp_port(
-    ec2: boto3.resources.factory.ec2.ServiceResource, cluster_metadata: dict
-) -> None:
+def open_tcp_port(ec2, cluster_metadata: dict) -> None:
     """Open TCP Port on default security group"""
     try:
         vpc = ec2.Vpc(id=cluster_metadata["VpcId"])
