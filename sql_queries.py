@@ -8,6 +8,7 @@ config.read("dwh.cfg")
 AWS_REGION = config.get("AWS", "AWS_REGION")
 IAM_ROLE_ARN = config.get("IAM_ROLE", "ARN")
 LOG_DATA = config.get("S3", "LOG_DATA")
+LOG_JSONPATH = config.get("S3", "LOG_JSONPATH")
 SONG_DATA = config.get("S3", "SONG_DATA")
 
 # DROP TABLES
@@ -24,39 +25,39 @@ time_table_drop = "DROP TABLE IF EXISTS time"
 
 staging_events_table_create = """
 CREATE TABLE stagingEvents (
-    artist VARCHAR(30) NOT NULL,
+    artist VARCHAR(200),
     auth VARCHAR(20) NOT NULL,
-    firstName VARCHAR(30) NOT NULL,
-    lastName VARCHAR(30) NOT NULL,
-    gender VARCHAR(1) NOT NULL,
-    itemInSession SMALLINT NOT NULL,
-    length NUMERIC NOT NULL,
-    level VARCHAR (15) NOT NULL,
-    location VARCHAR(50) NOT NULL,
+    first_name VARCHAR(30),
+    gender VARCHAR(1),
+    item_in_session SMALLINT NOT NULL,
+    last_name VARCHAR(30),   
+    length NUMERIC,
+    level VARCHAR (10),
+    location VARCHAR(50),
     method VARCHAR(10) NOT NULL,
     page VARCHAR(20) NOT NULL,
-    registration NUMERIC NOT NULL,
-    sessionId INTEGER NOT NULL,
-    song VARCHAR(40) NOT NULL,
+    registration NUMERIC,
+    session_id INTEGER NOT NULL,
+    song TEXT,
     status SMALLINT NOT NULL,
     ts BIGINT NOT NULL,
-    userAgent VARCHAR(100) NOT NULL,
-    userId INTEGER NOT NULL
+    user_agent TEXT,
+    user_id INTEGER
 );
 """
 
 staging_songs_table_create = """
 CREATE TABLE stagingSongs (
-    artist_id VARCHAR(20) NOT NULL,
-    artist_latitude NUMERIC NOT NULL,
-    artist_location VARCHAR(30) NOT NULL,
-    artist_longitude  NUMERIC NOT NULL,
-    artist_name VARCHAR(30) NOT NULL,
-    duration NUMERIC NOT NULL,
-    num_songs SMALLINT NOT NULL,
     song_id VARCHAR(20) NOT NULL,
-    title VARCHAR(80) NOT NULL,
-    year SMALLINT NOT NULL
+    num_songs SMALLINT NOT NULL,
+    title VARCHAR(300) NOT NULL,
+    artist_name VARCHAR(400) NOT NULL,
+    artist_latitude NUMERIC,
+    year SMALLINT NOT NULL,
+    duration NUMERIC NOT NULL,
+    artist_id VARCHAR(20) NOT NULL,
+    artist_longitude NUMERIC,
+    artist_location VARCHAR(300) NOT NULL
 );
 """
 
@@ -69,7 +70,7 @@ CREATE TABLE songplays (
     song_id VARCHAR(20), 
     artist_id VARCHAR(20), 
     session_id INTEGER, 
-    location VARCHAR(50) ,
+    location TEXT ,
     user_agent TEXT
 );
 """
@@ -87,7 +88,7 @@ CREATE TABLE users (
 song_table_create = """
 CREATE TABLE songs (
     song_id INTEGER NOT NULL, 
-    title VARCHAR(80) NOT NULL, 
+    title TEXT NOT NULL, 
     artist_id VARCHAR(20) NOT NULL, 
     year SMALLINT, 
     Duration NUMERIC
@@ -97,7 +98,7 @@ CREATE TABLE songs (
 artist_table_create = """
 CREATE TABLE artists (
     artist_id VARCHAR(20) NOT NULL,
-    name VARCHAR(30) NOT NULL,
+    name VARCHAR(200) NOT NULL,
     location VARCHAR(30),
     latitude NUMERIC,
     longitude NUMERIC  
@@ -119,22 +120,18 @@ CREATE TABLE time (
 # STAGING TABLES
 
 staging_events_copy = (
-    """
-    copy stagingEvents
-    from {}
-    iam_role {}
-    region '{}'
-    json 'auto';
-    """
-).format(LOG_DATA, IAM_ROLE_ARN, AWS_REGION)
+    """copy stagingEvents from {}
+iam_role {}
+region '{}'
+json {};
+"""
+).format(LOG_DATA, IAM_ROLE_ARN, AWS_REGION, LOG_JSONPATH)
 
 staging_songs_copy = (
-    """
-    copy stagingSongs
-    from {}
-    iam_role {}
-    region '{}'
-    json 'auto';
+    """copy stagingSongs from {}
+iam_role {}
+region '{}'
+json 'auto';
     """
 ).format(SONG_DATA, IAM_ROLE_ARN, AWS_REGION)
 
@@ -179,8 +176,8 @@ create_table_queries = [
     time_table_create,
 ]
 drop_table_queries = [
-    staging_events_table_drop,
-    staging_songs_table_drop,
+    # staging_events_table_drop,
+    # staging_songs_table_drop,
     songplay_table_drop,
     user_table_drop,
     song_table_drop,
@@ -188,6 +185,7 @@ drop_table_queries = [
     time_table_drop,
 ]
 copy_table_queries = [staging_events_copy, staging_songs_copy]
+copy_table_queries = [staging_events_copy]
 insert_table_queries = [
     songplay_table_insert,
     user_table_insert,
