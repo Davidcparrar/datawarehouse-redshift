@@ -5,7 +5,6 @@ Based on IaC Solution.ipynb notebook drom Udacity Data Engineer Nanodegree
 import configparser
 import json
 import sys
-from typing import Tuple
 import argparse
 import boto3
 import pandas as pd
