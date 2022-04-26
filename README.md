@@ -1,6 +1,6 @@
 # Sparkify AWS Redshift Data Warehouse
 
-This Data Warehouse was created as a means to access the Sparkify data for analytical purposes
+This Data Warehouse was created as a means to access the Sparkify data for analytical purposes.
 
 ## Project structure
 
@@ -24,6 +24,6 @@ The project has been created with the following structure:
 - requirements.txt: requirements for python env.
 - sql_queries.py: Sql queries to create the Data Warehouse
 
-## Notes
+### Notes
 
 The repo needs a `dwh.cfg` config file that contains the secrets and enviroment variables needed for the project to run.
