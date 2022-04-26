@@ -14,7 +14,7 @@ SONG_DATA = config.get("S3", "SONG_DATA")
 
 staging_events_table_drop = "DROP TABLE IF EXISTS stagingEvents"
 staging_songs_table_drop = "DROP TABLE IF EXISTS stagingSongs"
-songplay_table_drop = "DROP TABLE IF EXISTS songplay"
+songplay_table_drop = "DROP TABLE IF EXISTS songplays"
 user_table_drop = "DROP TABLE IF EXISTS users"
 song_table_drop = "DROP TABLE IF EXISTS songs"
 artist_table_drop = "DROP TABLE IF EXISTS artists"
@@ -62,7 +62,7 @@ CREATE TABLE stagingSongs (
 
 songplay_table_create = """
 CREATE TABLE songplays (
-    songplay_id INTEGER NOT NULL, 
+    songplay_id INTEGER NOT NULL identity(0, 1), 
     start_time TIMESTAMP NOT NULL, 
     user_id INTEGER NOT NULL, 
     level VARCHAR(10), 
@@ -100,20 +100,20 @@ CREATE TABLE artists (
     name VARCHAR(30) NOT NULL,
     location VARCHAR(30),
     latitude NUMERIC,
-    longitude NUMERIC,  
+    longitude NUMERIC  
 );
 """
 
 time_table_create = """
-CREATE TABLE artists (
+CREATE TABLE time (
     start_time TIMESTAMP NOT NULL, 
     hour INTEGER NOT NULL,
     day INTEGER NOT NULL,
     week INTEGER NOT NULL, 
     month INTEGER NOT NULL,
     year INTEGER NOT NULL,
-    weekday INTEGER NOT NULL,
-)
+    weekday INTEGER NOT NULL
+);
 """
 
 # STAGING TABLES
@@ -128,7 +128,6 @@ staging_events_copy = (
     """
 ).format(LOG_DATA, IAM_ROLE_ARN, AWS_REGION)
 
-print(staging_events_copy)
 staging_songs_copy = (
     """
     copy stagingSongs
@@ -138,12 +137,24 @@ staging_songs_copy = (
     json 'auto';
     """
 ).format(SONG_DATA, IAM_ROLE_ARN, AWS_REGION)
-print(staging_songs_copy)
+
 # FINAL TABLES
 
 songplay_table_insert = """
-"""
 
+"""
+# INSERT INTO songplays (
+#     start_time,
+#     user_id,
+#     level,
+#     song_id,
+#     artist_id,
+#     session_id,
+#     location,
+#     user_agent)
+# SELECT e.
+
+# FROM stagingEvents e
 user_table_insert = """
 """
 
