@@ -5,6 +5,11 @@ import configparser
 config = configparser.ConfigParser()
 config.read("dwh.cfg")
 
+AWS_REGION = config.get("AWS", "AWS_REGION")
+IAM_ROLE_ARN = config.get("IAM_ROLE", "ARN")
+LOG_DATA = config.get("S3", "LOG_DATA")
+SONG_DATA = config.get("S3", "SONG_DATA")
+
 # DROP TABLES
 
 staging_events_table_drop = "DROP TABLE IF EXISTS stagingEvents"
@@ -60,22 +65,22 @@ CREATE TABLE songplays (
     songplay_id INTEGER NOT NULL, 
     start_time TIMESTAMP NOT NULL, 
     user_id INTEGER NOT NULL, 
-    level VARCHAR(10) NOT NULL, 
+    level VARCHAR(10), 
     song_id VARCHAR(20), 
     artist_id VARCHAR(20), 
-    session_id INTEGER NOT NULL, 
-    location VARCHAR(50) NOT NULL,
-    user_agent VARCHAR(100) NOT NULL
+    session_id INTEGER, 
+    location VARCHAR(50) ,
+    user_agent TEXT
 );
 """
 
 user_table_create = """
 CREATE TABLE users (
     user_id INTEGER NOT NULL, 
-    first_name VARCHAR(30) NOT NULL,
-    last_name VARCHAR(30) NOT NULL,
-    gender VARCHAR(1) NOT NULL, 
-    level VARCHAR(10) NOT NULL
+    first_name VARCHAR(30),
+    last_name VARCHAR(30),
+    gender VARCHAR(1), 
+    level VARCHAR(10)
 );
 """
 
@@ -84,8 +89,8 @@ CREATE TABLE songs (
     song_id INTEGER NOT NULL, 
     title VARCHAR(80) NOT NULL, 
     artist_id VARCHAR(20) NOT NULL, 
-    year SMALLINT NOT NULL, 
-    Duration NUMERIC NOT NULL
+    year SMALLINT, 
+    Duration NUMERIC
 );
 """
 
@@ -93,9 +98,9 @@ artist_table_create = """
 CREATE TABLE artists (
     artist_id VARCHAR(20) NOT NULL,
     name VARCHAR(30) NOT NULL,
-    location VARCHAR(30) NOT NULL,
-    latitude NUMERIC NOT NULL,
-    longitude  NUMERIC NOT NULL,  
+    location VARCHAR(30),
+    latitude NUMERIC,
+    longitude NUMERIC,  
 );
 """
 
@@ -115,14 +120,25 @@ CREATE TABLE artists (
 
 staging_events_copy = (
     """
-"""
-).format()
+    copy stagingEvents
+    from {}
+    iam_role {}
+    region '{}'
+    json 'auto';
+    """
+).format(LOG_DATA, IAM_ROLE_ARN, AWS_REGION)
 
+print(staging_events_copy)
 staging_songs_copy = (
     """
-"""
-).format()
-
+    copy stagingSongs
+    from {}
+    iam_role {}
+    region '{}'
+    json 'auto';
+    """
+).format(SONG_DATA, IAM_ROLE_ARN, AWS_REGION)
+print(staging_songs_copy)
 # FINAL TABLES
 
 songplay_table_insert = """
