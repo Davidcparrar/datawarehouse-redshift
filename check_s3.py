@@ -37,6 +37,7 @@ def main():
         print(obj.key)
 
     udacity.download_file(obj.key, f"sample/{obj.key.split('/')[-1]}")
+    udacity.download_file("log_json_path.json", "sample/log_json_path.json")
 
 
 if __name__ == "__main__":
