@@ -64,7 +64,7 @@ python iac_redshift.py --delete
 
 ### Table creation
 
-The file sql_queries.py contains the SQL instructions to create the tables. Running the create_tables.py file will create the following tables
+The file sql_queries.py contains the SQL instructions to create the tables. Running the create_tables.py file will produce the following tables
 
 - stagingEvents : Staging table that maps the S3 Log data into the cluster.
 - stagingSongs: Staging table that maps the S3 Song data into the cluster.
@@ -101,7 +101,7 @@ python etl.py
 
 With this implementation it is possible to answer simple questions like
 
-* who are the most loyal users?
+* Who are the most loyal users?
 
 ```sql
 SELECT sp.user_id, u.first_name, u.last_name, COUNT(sp.user_id) 
