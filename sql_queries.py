@@ -64,10 +64,10 @@ CREATE TABLE stagingSongs (
 songplay_table_create = """
 CREATE TABLE songplays (
     songplay_id INTEGER NOT NULL identity(0, 1), 
-    start_time TIMESTAMP NOT NULL,
+    start_time TIMESTAMP NOT NULL SORTKEY,
     user_id INTEGER,
     level VARCHAR(10),
-    song_id VARCHAR(20),
+    song_id VARCHAR(20) DISTKEY,
     artist_id VARCHAR(20),
     session_id INTEGER,
     location VARCHAR(300),
@@ -78,17 +78,18 @@ CREATE TABLE songplays (
 
 user_table_create = """
 CREATE TABLE users (
-    user_id INTEGER NOT NULL, 
+    user_id INTEGER NOT NULL SORTKEY, 
     first_name VARCHAR(30),
     last_name VARCHAR(30),
     gender VARCHAR(1), 
     level VARCHAR(10)
-);
+)
+DISTSTYLE ALL;
 """
 
 song_table_create = """
 CREATE TABLE songs (
-    song_id VARCHAR(20) NOT NULL, 
+    song_id VARCHAR(20) NOT NULL SORTKEY DISTKEY, 
     title VARCHAR(300) NOT NULL, 
     artist_id VARCHAR(20) NOT NULL, 
     year SMALLINT, 
@@ -98,7 +99,7 @@ CREATE TABLE songs (
 
 artist_table_create = """
 CREATE TABLE artists (
-    artist_id VARCHAR(20) NOT NULL,
+    artist_id VARCHAR(20) NOT NULL SORTKEY,
     name VARCHAR(400) NOT NULL,
     location VARCHAR(300),
     latitude NUMERIC,
@@ -108,14 +109,15 @@ CREATE TABLE artists (
 
 time_table_create = """
 CREATE TABLE time (
-    start_time TIMESTAMP NOT NULL, 
+    start_time TIMESTAMP NOT NULL SORTKEY, 
     hour INTEGER NOT NULL,
     day INTEGER NOT NULL,
     week INTEGER NOT NULL, 
     month INTEGER NOT NULL,
     year INTEGER NOT NULL,
     weekday INTEGER NOT NULL
-);
+)
+DISTSTYLE ALL;
 """
 
 # STAGING TABLES
@@ -235,8 +237,8 @@ FROM stagingEvents;
 # QUERY LISTS
 
 create_table_queries = [
-    # staging_events_table_create,
-    # staging_songs_table_create,
+    staging_events_table_create,
+    staging_songs_table_create,
     songplay_table_create,
     user_table_create,
     song_table_create,
@@ -244,8 +246,8 @@ create_table_queries = [
     time_table_create,
 ]
 drop_table_queries = [
-    # staging_events_table_drop,
-    # staging_songs_table_drop,
+    staging_events_table_drop,
+    staging_songs_table_drop,
     songplay_table_drop,
     user_table_drop,
     song_table_drop,

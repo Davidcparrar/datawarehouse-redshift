@@ -16,10 +16,7 @@ def insert_tables(cur, conn):
 
 
 def main():
-    import traceback
-    import sys
-
-    """Load staing tables and insert data into star schema"""
+    """Load staging tables and insert data into star schema"""
     config = configparser.ConfigParser()
     config.read("dwh.cfg")
 
@@ -31,10 +28,10 @@ def main():
         )
         cur = conn.cursor()
 
-        # load_staging_tables(cur, conn)
+        load_staging_tables(cur, conn)
         insert_tables(cur, conn)
-    except Exception:
-        traceback.print_exception(*sys.exc_info())
+    except Exception as e:
+        print(e)
     finally:
         conn.close()
 
