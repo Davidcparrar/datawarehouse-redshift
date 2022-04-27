@@ -97,6 +97,56 @@ To upload the data to the staging tables and the star schema run the following c
 ```
 python etl.py
 ```
+## Queries
+
+With this implementation it is possible to answer simple questions like
+
+* who are the most loyal users?
+
+```sql
+SELECT sp.user_id, u.first_name, u.last_name, COUNT(sp.user_id) 
+FROM (songplays sp JOIN users u ON u.user_id = sp.user_id) 
+GROUP BY sp.user_id, u.first_name, u.last_name 
+ORDER BY COUNT(sp.user_id) DESC;
+```
+
+* What time of day are certains songs listen to the most and by which kind of user?
+
+```sql
+SELECT u.level, t.hour, s.title, COUNT(sp.session_id) AS sessions
+FROM songplays sp
+JOIN users u ON (u.user_id = sp.user_id)
+JOIN time t ON (t.start_time = sp.start_time)
+JOIN songs s ON (s.song_id = sp.song_id)
+GROUP BY (u.level, t.hour, s.title)
+ORDER BY sessions DESC
+LIMIT  10;
+```
+![Alt text](https://raw.githubusercontent.com/Davidcparrar/datawarehouse-redshift/main/query_sessions.PNG)
+
+* Or create OLAP Cubes for further analysis.
+
+```sql
+SELECT  NULL as hour, NULL as title, COUNT(sp.session_id) AS sessions
+FROM songplays sp
+   UNION all 
+SELECT NULL, s.title, COUNT(sp.session_id) AS sessions
+FROM songplays sp
+JOIN songs s ON (s.song_id = sp.song_id)
+GROUP BY  s.title
+    UNION all 
+SELECT t.hour , NULL, COUNT(sp.session_id) AS sessions
+FROM songplays sp
+JOIN time t ON (t.start_time = sp.start_time)
+GROUP BY t.hour
+    UNION all
+SELECT t.hour, s.title, COUNT(sp.session_id) AS sessions
+FROM songplays sp
+JOIN time t ON (t.start_time = sp.start_time)
+JOIN songs s ON (s.song_id = sp.song_id)
+GROUP BY (t.hour, s.title)
+```
+![Alt text](https://raw.githubusercontent.com/Davidcparrar/datawarehouse-redshift/main/OLAP.PNG)
 
 #### Notes
 
