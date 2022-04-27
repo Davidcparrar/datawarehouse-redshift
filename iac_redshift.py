@@ -1,6 +1,6 @@
 """ 
 IAC script to create AWS Redshift Cluster
-Based on IaC Solution.ipynb notebook drom Udacity Data Engineer Nanodegree
+Based on IaC Solution.ipynb notebook from Udacity Data Engineer Nanodegree
 """
 import configparser
 import json
