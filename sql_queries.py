@@ -32,7 +32,7 @@ CREATE TABLE stagingEvents (
     item_in_session SMALLINT NOT NULL,
     last_name VARCHAR(30),   
     length NUMERIC,
-    level VARCHAR (10),
+    level VARCHAR(10),
     location VARCHAR(50),
     method VARCHAR(10) NOT NULL,
     page VARCHAR(20) NOT NULL,
@@ -64,16 +64,17 @@ CREATE TABLE stagingSongs (
 songplay_table_create = """
 CREATE TABLE songplays (
     songplay_id INTEGER NOT NULL identity(0, 1), 
-    start_time TIMESTAMP NOT NULL, 
-    user_id INTEGER NOT NULL, 
-    level VARCHAR(10), 
-    song_id VARCHAR(20), 
-    artist_id VARCHAR(20), 
-    session_id INTEGER, 
-    location TEXT ,
+    start_time TIMESTAMP NOT NULL,
+    user_id INTEGER,
+    level VARCHAR(10),
+    song_id VARCHAR(20),
+    artist_id VARCHAR(20),
+    session_id INTEGER,
+    location VARCHAR(300),
     user_agent TEXT
 );
 """
+
 
 user_table_create = """
 CREATE TABLE users (
@@ -87,19 +88,19 @@ CREATE TABLE users (
 
 song_table_create = """
 CREATE TABLE songs (
-    song_id INTEGER NOT NULL, 
-    title TEXT NOT NULL, 
+    song_id VARCHAR(20) NOT NULL, 
+    title VARCHAR(300) NOT NULL, 
     artist_id VARCHAR(20) NOT NULL, 
     year SMALLINT, 
-    Duration NUMERIC
+    duration NUMERIC
 );
 """
 
 artist_table_create = """
 CREATE TABLE artists (
     artist_id VARCHAR(20) NOT NULL,
-    name VARCHAR(200) NOT NULL,
-    location VARCHAR(30),
+    name VARCHAR(400) NOT NULL,
+    location VARCHAR(300),
     latitude NUMERIC,
     longitude NUMERIC  
 );
@@ -138,37 +139,104 @@ json 'auto';
 # FINAL TABLES
 
 songplay_table_insert = """
-
+INSERT INTO songplays (
+    start_time, 
+    user_id,
+    level,
+    song_id,
+    artist_id,
+    session_id,
+    location,
+    user_agent
+)
+SELECT date_add('ms',se.ts,'1970-01-01') as start_time,
+    se.user_id,
+    se.level,
+    ss.song_id,
+    ss.artist_id,
+    se.session_id,
+    se.location,
+    se.user_agent
+FROM stagingEvents se
+JOIN stagingSongs ss
+ON se.artist = ss.artist_name AND  se.song = ss.title;
 """
-# INSERT INTO songplays (
-#     start_time,
-#     user_id,
-#     level,
-#     song_id,
-#     artist_id,
-#     session_id,
-#     location,
-#     user_agent)
-# SELECT e.
 
-# FROM stagingEvents e
 user_table_insert = """
+INSERT INTO users (user_id, 
+    first_name,
+    last_name,
+    gender, 
+    level
+)
+SELECT DISTINCT(user_id),
+	first_name,
+    last_name,
+    gender,
+    level
+FROM stagingEvents
+WHERE user_id IS NOT NULL;
 """
 
 song_table_insert = """
+INSERT INTO songs (
+    song_id,
+    title, 
+    artist_id, 
+    year, 
+    duration
+)
+SELECT DISTINCT(song_id),
+    title, 
+    artist_id, 
+    year, 
+    duration
+FROM stagingSongs
+WHERE song_id IS NOT NULL;
 """
 
 artist_table_insert = """
+INSERT INTO artists (
+    artist_id,
+    name, 
+    location, 
+    latitude, 
+    longitude
+)
+SELECT DISTINCT(artist_id),
+    artist_name AS name,
+    artist_location AS location,
+    artist_latitude AS latitude,
+    artist_longitude AS longitude
+FROM stagingSongs
+WHERE artist_id IS NOT NULL;
 """
 
 time_table_insert = """
+INSERT INTO time (
+    start_time,
+    hour,
+    day,
+    week,
+    month,
+    year,
+    weekday
+) 
+SELECT DISTINCT(date_add('ms',ts,'1970-01-01')) as start_time,
+    EXTRACT(hour FROM start_time) AS hour,
+    EXTRACT(day FROM start_time) AS day,
+    EXTRACT(week FROM start_time) AS week, 
+    EXTRACT(month FROM start_time) AS month,
+    EXTRACT(year FROM start_time) AS year,
+    EXTRACT(weekday FROM start_time) AS weekday
+FROM stagingEvents;
 """
 
 # QUERY LISTS
 
 create_table_queries = [
-    staging_events_table_create,
-    staging_songs_table_create,
+    # staging_events_table_create,
+    # staging_songs_table_create,
     songplay_table_create,
     user_table_create,
     song_table_create,
@@ -185,7 +253,7 @@ drop_table_queries = [
     time_table_drop,
 ]
 copy_table_queries = [staging_events_copy, staging_songs_copy]
-copy_table_queries = [staging_events_copy]
+
 insert_table_queries = [
     songplay_table_insert,
     user_table_insert,
