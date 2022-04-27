@@ -52,22 +52,22 @@ After a while check if the cluster is available by running the status command
 python iac_redshift.py --status
 ```
 
-This will return a table and if the status is `available` it will also return the cluster address and the IAM role. Please fill in this values into the configuration file. CLUSTER-HOST and IAM_ROLE-NAME respectively.
+This will return a table and if the status is `available` it will also return the cluster address and the IAM role. Please fill in these values into the configuration file. CLUSTER-HOST and IAM_ROLE-NAME respectively.
 
-To avoid innecessary costs while developing the cluster can be deleted running:
+The cluster can be deleted running to avoid innecessary costs while developing:
 
 ```bash
 python iac_redshift.py --delete
 ```
 
-> :warning: **This will delete the cluster and all the information with it. After this point all data will be lost and both the creation and uploading scripts will be needed to recreate the cluster** 
+> :warning: **This will delete the cluster and all the information with it. After this point all data will be lost and both the creation and uploading scripts will be needed to recreate the cluster.** 
 
 ### Table creation
 
 The file sql_queries.py contains the SQL instructions to create the tables. Running the create_tables.py file will create the following tables
 
 - stagingEvents : Staging table that maps the S3 Log data into the cluster.
-- stagingSongs: Staging table that maps the S3 Log data into the cluster.
+- stagingSongs: Staging table that maps the S3 Song data into the cluster.
 
 And the Schema for OLAP.
 
